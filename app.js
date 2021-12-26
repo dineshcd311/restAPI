@@ -1,9 +1,9 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
+// var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var bodyParser = require('body-parser');
+// var bodyParser = require('body-parser');
 var session = require('express-session')
 var FileStore = require('session-file-store')(session);
 var passport = require('passport');
@@ -23,7 +23,7 @@ const Promos = require('./models/promotions');
 const Leaders = require('./models/leaders');
 const { createSecretKey } = require('crypto');
 
-const url = config.mongoUrl;
+const url = "mongodb://localhost:27017/conFusion";
 const connect = mongoose.connect(url);
 
 connect.then((db)=>{
@@ -52,64 +52,70 @@ app.use(session({
 // app.use(passport.initialize());
 // app.use(passport.session());
 
-function auth(req,res,next){
+// function auth(req,res,next){
+//     console.log(req.session);
+//     if(!req.session.user) // req.signedCookies.user
+//     {
+//         var authHeader = req.headers.authorization;
+//         if(!authHeader){
+//             var err = new Error("You are not authenticated");
+//             res.setHeader('WWW-Authentication','Basic');
+//             err.status = 401;
+//             next(err);
+//             return;
+//         }
+
+//         var auth = new Buffer.from(authHeader.split(' ')[1],'base64').toString().split(":");
+//         var user = auth[0];
+//         var password = auth[1];
+//         if(user === 'admin' && password === 'password'){
+//             req.session.user = 'admin'
+//             next();
+//         }
+//         else{
+//             var err = new Error("You are not authenticated");
+//             res.setHeader('WWW-Authentication', 'Basic');
+//             err.status = 401;
+//             next(err);
+//         }
+
+//     }
+//     else{
+//         if(req.session.user === 'admin'){
+//             next();
+//         }
+//         else{
+//             var err = new Error("You are not authenticated");
+//             err.status = 401;
+//             next(err);
+//         }
+//     }
+// }
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
+function auth (req, res, next) {
     console.log(req.session);
-    if(!req.session.user) // req.signedCookies.user
-    {
-        var authHeader = req.headers.authorization;
-        if(!authHeader){
-            var err = new Error("You are not authenticated");
-            res.setHeader('WWW-Authentication','Basic');
-            err.status = 401;
-            next(err);
-            return;
-        }
 
-        var auth = new Buffer.from(authHeader.split(' ')[1],'base64').toString().split(":");
-        var user = auth[0];
-        var password = auth[1];
-        if(user === 'admin' && password === 'password'){
-            req.session.user = 'admin'
-            next();
-        }
-        else{
-            var err = new Error("You are not authenticated");
-            res.setHeader('WWW-Authentication', 'Basic');
-            err.status = 401;
-            next(err);
-        }
-
+  if(!req.session.user) {
+      var err = new Error('You are not authenticated!');
+      err.status = 403;
+      return next(err);
+  }
+  else {
+    if (req.session.user === 'authenticated') {
+      next();
     }
-    else{
-        if(req.session.user === 'admin'){
-            next();
-        }
-        else{
-            var err = new Error("You are not authenticated");
-            err.status = 401;
-            next(err);
-        }
+    else {
+      var err = new Error('You are not authenticated!');
+      err.status = 403;
+      return next(err);
     }
+  }
 }
 
 app.use(auth)
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
-// function auth (req, res, next) {
-    
-//   if(!req.user) {
-//     var err = new Error('You are not authenticated!');
-//     err.status = 403;
-//     return next(err);
-//   }
-//   else {
-//     next();
-//   }
-// }
-  
-// app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
 
