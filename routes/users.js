@@ -9,29 +9,30 @@ const cors = require("./cors");
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.options(cors.corsWithOptions, (req, res) => {
+router
+  .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus = 200;
   })
   .get(
-  "/",
-  cors.corsWithOptions,
-  authenticate.verifyUser,
-  authenticate.verifyAdmin,
-  function (req, res, next) {
-    User.find({})
-      .then(
-        (user) => {
-          if (user) {
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.json(user);
-          }
-        },
-        (err) => next(err)
-      )
-      .catch((err) => next(err));
-  }
-);
+    "/",
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    function (req, res, next) {
+      User.find({})
+        .then(
+          (user) => {
+            if (user) {
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.json(user);
+            }
+          },
+          (err) => next(err)
+        )
+        .catch((err) => next(err));
+    }
+  );
 
 // router.post('/signup', (req, res, next) => {
 //     User.findOne({username: req.body.username})
@@ -175,5 +176,27 @@ router
       next(err);
     }
   });
+
+router
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus = 200;
+  })
+  .get(
+    "/facebook/token",
+    cors.corsWithOptions,
+    passport.authenticate("facebook-token"),
+    (req, res) => {
+      if (req.user) {
+        var token = authenticate.getToken({ _id: req.user._id });
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({
+          success: true,
+          token: token,
+          status: "You are successfully logged in!",
+        });
+      }
+    }
+  );
 
 module.exports = router;
